@@ -12,11 +12,17 @@
 
    <Button
        android:id="@+id/button_capture"
-       android:text="Capture"
+       android:layout_width="fill_parent"
+       android:layout_height="50dp"
+       android:layout_gravity="bottom"
+       android:layout_margin="10dp"
+       android:text="Capture" />
+
+   <Button
+       android:id="@+id/button_switch"
        android:layout_width="fill_parent"
        android:layout_height="50dp"
        android:layout_margin="10dp"
-       android:layout_gravity="bottom"
-       />
+       android:text="Switch" />
 
 </FrameLayout>

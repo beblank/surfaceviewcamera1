@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         btn_change.setOnClickListener {
-            btn_change.visibility = View.INVISIBLE
             askPermission()
             val granted = PermissionUtils.isGranted(this, PermissionEnum.CAMERA)
             if (granted)

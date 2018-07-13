@@ -16,6 +16,7 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import android.widget.Toast
 import android.hardware.Camera.AutoFocusCallback
+import android.hardware.Camera.open
 import android.os.Environment
 import java.io.File
 import java.util.*
@@ -51,36 +52,52 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
         mPreview = camera_view
         mPreview?.getHolder()?.addCallback(this)
         mPreview?.getHolder()?.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
-
-
-        mCamera = Camera.open(currentCameraId)
-
+        mCamera = open(currentCameraId)
         button_capture.setOnClickListener {
             mCamera?.takePicture(this, null, this)
         }
+        button_switch.setOnClickListener {
+            switchCamera()
+        }
+    }
+
+    private fun switchCamera() {
+        if (mCamera != null)
+            mCamera!!.stopPreview()
+        mCamera?.release()
+        if(currentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
+            currentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT
+        else
+            currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK
+        mCamera = open(currentCameraId)
+        rotateCamera()
     }
 
     override fun onPause() {
         super.onPause()
-        mCamera?.stopPreview();
+        mCamera?.stopPreview()
+        mCamera?.release()
+        mCamera = null
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mCamera?.release();
-        Log.d("CAMERA","Destroy");
+        Log.d("CAMERA","Destroy")
     }
 
     fun onCancelClick(v: View) {
-
         mCamera?.stopPreview()
         mCamera?.release()
-        if (currentCameraId === Camera.CameraInfo.CAMERA_FACING_BACK) {
+        if (currentCameraId === Camera.CameraInfo.CAMERA_FACING_BACK)
             currentCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT
-        } else {
+        else
             currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK
-        }
+
         mCamera = Camera.open(currentCameraId)
+        rotateCamera()
+    }
+
+    fun rotateCamera(){
         val info = Camera.CameraInfo()
         Camera.getCameraInfo(Camera.CameraInfo.CAMERA_FACING_FRONT, info)
         val windowManager = context?.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -91,29 +108,16 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
             Surface.ROTATION_90 -> degrees = 90
             Surface.ROTATION_180 -> degrees = 180
             Surface.ROTATION_270 -> degrees = 270
-        }//Natural orientation
-        //Landscape left
-        //Upside down
-        //Landscape right
+        }
         val rotate = (info.orientation - degrees + 360) % 360
 
         //STEP #2: Set the 'rotation' parameter
         val params = mCamera?.getParameters()
         params?.setRotation(rotate)
-        try {
-            mCamera?.setPreviewDisplay(mPreview?.getHolder())
-        } catch (e: IOException) {
-            // TODO Auto-generated catch block
-            e.printStackTrace()
-        }
-
+        setPreviewDisplayCamera()
         mCamera?.setParameters(params)
         mCamera?.setDisplayOrientation(90)
         mCamera?.startPreview()
-    }
-
-    fun onSnapClick(v: View) {
-        mCamera?.takePicture(this, null, null, this)
     }
 
 
@@ -147,12 +151,15 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
     }
 
     override fun surfaceCreated(holder: SurfaceHolder?) {
+       setPreviewDisplayCamera()
+    }
+
+    private fun setPreviewDisplayCamera(){
         try {
             mCamera?.setPreviewDisplay(mPreview?.getHolder())
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     override fun onShutter() {
@@ -182,9 +189,6 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
             e.printStackTrace()
             Log.d("Log", "onPictureTakenErro - wrote bytes: " + data?.size)
         } finally {
-            //val i = getIntent()
-            //i.putExtra("Path", filePath)
-            //setResult(RESULT_OK, i)
             //finish()
         }
         camera?.startPreview()
