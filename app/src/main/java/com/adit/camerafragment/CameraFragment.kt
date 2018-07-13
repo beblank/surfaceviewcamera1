@@ -16,8 +16,9 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import android.widget.Toast
 import android.hardware.Camera.AutoFocusCallback
-
-
+import android.os.Environment
+import java.io.File
+import java.util.*
 
 
 /**
@@ -32,6 +33,7 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
     var mPreview: SurfaceView? = null
     var filePath: String? = null
     var currentCameraId = 0
+    val dir = "/Pictures/CamFrag/"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -157,22 +159,28 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
         Toast.makeText(context, "Click!", Toast.LENGTH_SHORT).show()
     }
 
+    fun checkDir(){
+        val imgDir = File(Environment.getExternalStorageDirectory(), dir)
+        if (!imgDir.exists())
+            imgDir.mkdirs()
+    }
+
     override fun onPictureTaken(data: ByteArray?, camera: Camera?) {
-        //Here, we chose internal storage
-        var fos: FileOutputStream? = null
+        checkDir()
         try {
-            filePath = context?.filesDir.toString() + "test.jpg"
-            fos = FileOutputStream(
+            val path = Environment.getExternalStorageDirectory().toString()
+            filePath = path + dir + "${UUID.randomUUID()}.jpg"
+            val fos = FileOutputStream(
                     filePath)
-            fos!!.write(data)
-            fos!!.close()
-            //Log.d("Log", "onPictureTaken - wrote bytes: " + data.length);
+            fos.write(data)
+            fos.close()
+            Log.d("Log", "onPictureTaken - path: " + filePath);
         } catch (e: FileNotFoundException) {
             e.printStackTrace()
-            Log.d("Log", "onPictureTaken - wrote bytes: " + data?.size)
+            Log.d("Log", "onPictureTakenErro - wrote bytes: " + data?.size)
         } catch (e: IOException) {
             e.printStackTrace()
-            Log.d("Log", "onPictureTaken - wrote bytes: " + data?.size)
+            Log.d("Log", "onPictureTakenErro - wrote bytes: " + data?.size)
         } finally {
             //val i = getIntent()
             //i.putExtra("Path", filePath)

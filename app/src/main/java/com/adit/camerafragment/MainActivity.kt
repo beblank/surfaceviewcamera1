@@ -1,8 +1,14 @@
 package com.adit.camerafragment
 
+import android.opengl.Visibility
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.view.View
+import kotlinx.android.synthetic.main.activity_main.*
+import rebus.permissionutils.*
+import rebus.permissionutils.AskAgainCallback.UserResponse
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -10,7 +16,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         if(savedInstanceState == null)
-            changeFragment(CameraFragment(), "cam")
+            askPermission()
+
+    }
+
+    private fun askPermission() {
+        PermissionManager.Builder()
+                .permission(PermissionEnum.WRITE_EXTERNAL_STORAGE, PermissionEnum.CAMERA, PermissionEnum.READ_EXTERNAL_STORAGE)
+                .ask(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        btn_change.setOnClickListener {
+            btn_change.visibility = View.INVISIBLE
+            askPermission()
+            val granted = PermissionUtils.isGranted(this, PermissionEnum.CAMERA)
+            if (granted)
+                changeFragment(CameraFragment(), "cam")
+        }
     }
 
     fun changeFragment(f: Fragment, tag: String) {
