@@ -115,35 +115,15 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
         val params = mCamera?.getParameters()
         params?.setRotation(rotate)
         setPreviewDisplayCamera()
-        mCamera?.setParameters(params)
+        mCamera?.parameters = setCamFocusMode(params!!)
+        mCamera?.parameters = params
         mCamera?.setDisplayOrientation(90)
         mCamera?.startPreview()
     }
 
 
     override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-        val info = Camera.CameraInfo()
-        Camera.getCameraInfo(Camera.CameraInfo.CAMERA_FACING_BACK, info)
-        val windowManager = context?.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val rotation = windowManager.getDefaultDisplay().getRotation()
-        var degrees = 0
-        when (rotation) {
-            Surface.ROTATION_0 -> degrees = 0
-            Surface.ROTATION_90 -> degrees = 90
-            Surface.ROTATION_180 -> degrees = 180
-            Surface.ROTATION_270 -> degrees = 270
-        }//Natural orientation
-        //Landscape left
-        //Upside down
-        //Landscape right
-        val rotate = (info.orientation - degrees + 360) % 360
-
-        //STEP #2: Set the 'rotation' parameter
-        val params = mCamera?.getParameters()
-        params?.setRotation(rotate)
-        mCamera?.setParameters(params)
-        mCamera?.setDisplayOrientation(90)
-        mCamera?.startPreview()
+        rotateCamera()
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder?) {
@@ -193,5 +173,17 @@ class CameraFragment : Fragment(), SurfaceHolder.Callback, Camera.ShutterCallbac
         }
         camera?.startPreview()
     }
+
+    fun setCamFocusMode(parameters: Camera.Parameters):Camera.Parameters{
+        val focusModes = parameters?.getSupportedFocusModes();
+        if(focusModes!!.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)){
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        } else
+            if(focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)){
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+            }
+        return parameters
+    }
+
 
 }
